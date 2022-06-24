@@ -1,7 +1,9 @@
-import xlrd
-import xlwt
+# import xlrd
+# import xlwt
 from pathlib import Path, PurePath
-
+from openpyxl import Workbook
+from openpyxl.utils import get_column_letter
+from openpyxl import load_workbook
 '''
 支持 Excel 读取的扩展库叫做 xlrd 库，支持 Excel 写入的扩展库叫做 xlwt 库
 安装命令：
@@ -49,12 +51,16 @@ def xls_files(src_dir):
     files = [x for x in p.iterdir() if PurePath(x).match('*.xls')]
     return files
 
+def xlsx_files(src_dir):
+    p = Path(src_dir)
+    # 列表推导式的方式
+    files = [x for x in p.iterdir() if PurePath(x).match('*.xlsx')]
+    return files
+
 
 content = []
 
-
-def merge(src_dir):
-    src_path = "execl"
+def merge(src_path):
     dst_file = "execl/汇总文件.xls"
     files = xls_files(src_path)
     for file in files:
@@ -91,4 +97,50 @@ def merge(src_dir):
 
     workbook.save(dst_file)
 
-merge('execl')
+
+# 利用 openpyxl 库实现上面方法相同的功能逻辑
+# openpyxl的行和列编号从1开始计算
+def merge_xlsx(src_dir):
+    dst_file = "execl/汇总文件.xlsx"
+    files = xlsx_files(src_dir)
+    # 读取各个excel中的原始数据，拆分拼装为二维数组
+    for file in files:
+        wb = load_workbook(file)
+        # ws = wb.active # 获取当前活跃的worksheet,默认就是第一个worksheet 当然也可以使用下面的方法
+        sheets = wb.get_sheet_names()
+        sheet_first = sheets[0]  # 第一个表格的名称
+        table = wb.get_sheet_by_name(sheet_first)
+        # 获取行和列
+        rows = table.rows
+        columns = table.columns
+        for row in rows:
+            line = [col.value for col in row]
+            # 行打印
+            # print(line)
+            content.append(line)
+
+    print(content)
+    return
+    # 写数据
+    xlsx_header = ['姓名', '数学成绩', '语文成绩']
+    workbook = Workbook()
+    xlsx_sheet = workbook.active
+    col = 1
+    row = 1
+    for cell_header in xlsx_header:
+        xlsx_sheet.cell(row, col).value=cell_header
+        col += 1
+
+    row += 1
+    for row_data in content:
+        col = 1
+        for cell in row_data:
+            xlsx_sheet.cell(row, col).value=cell
+            col += 1
+        row += 1
+
+    workbook.save(dst_file)
+
+
+# merge('execl')
+merge_xlsx('execl')
