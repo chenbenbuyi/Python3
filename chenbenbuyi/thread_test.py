@@ -1,6 +1,6 @@
 import threading
-import time
 from threading import current_thread
+import time
 
 
 def myThread(arg1, arg2):
@@ -15,3 +15,14 @@ for i in range(1, 5, 1):
     #  target 指定要执行的函数，arg为函数的参数
     t1 = threading.Thread(target=myThread, args=(i, i + 1))
     t1.start()
+
+
+# 继承 threading 的 Thread 类，重写run方法
+
+class Mythread(threading.Thread):
+    def run(self):
+        print("当前线程名称：%s" % current_thread().name)
+
+
+t1 = Mythread()
+t1.start()
