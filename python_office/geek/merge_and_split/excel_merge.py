@@ -1,5 +1,5 @@
-# import xlrd
-# import xlwt
+import xlrd
+import xlwt
 from pathlib import Path, PurePath
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
@@ -148,4 +148,44 @@ def merge_xlsx(src_dir):
 
 
 # merge('execl')
-merge_xlsx('execl')
+# merge_xlsx('execl')
+
+def split(prefix, src_file):
+    p = Path(prefix + '/' + src_file)
+    wb = load_workbook(p)
+    sheets = wb.sheetnames
+    wb_sheet = wb.active  # 当前激活的工作簿 实测为当前正在编辑使用的
+    row_datas = list(wb_sheet.values)
+    print(row_datas)
+    # sheet_first_name = sheets[0]
+    # table = wb[sheet_first_name]  指定sheet名称获取 wb 对象
+    rows = wb_sheet.rows
+    columns = wb_sheet.columns
+    max_row = wb_sheet.max_row  # 最大行数
+    # file_name = wb_sheet.cell(1, 1).value 读取单元格数据
+
+    # 表头处理
+    xlsx_header = []
+    for row in wb_sheet.iter_rows(max_row=1):
+        xlsx_header = [cell.value for cell in row]
+        print(xlsx_header)
+    # 表数据处理
+    for row in wb_sheet.iter_rows(min_row=2):
+        content = [cell.value for cell in row]
+        file_name = content[0]
+        print(content)
+        # 新文件写入
+        workbook = Workbook()
+        # 创建插入在 0 位置的sheet 这种方式总是会创建一个新的，导致表中有两个sheet
+        # sheet = workbook.create_sheet(file_name, 0)
+        sheet = workbook.active
+        sheet.title = file_name
+        for i in range(0, len(xlsx_header)):
+            sheet.cell(1, i + 1, xlsx_header[i])
+
+        for i in range(0, len(content)):
+            sheet.cell(2, i + 1, content[i])
+        workbook.save(prefix + '/' + file_name + '.xlsx')
+
+
+split('execl', '汇总文件.xlsx')
