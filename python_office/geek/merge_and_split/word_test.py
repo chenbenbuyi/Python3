@@ -23,17 +23,12 @@ Python 3.5 新增类型提示功能
     冒号后面是建议传入的参数类型
     箭头后面是建议函数返回的类型
 '''
-
-
-#  ps 文件打开的情况下无法操作，且该方法无法处理图片内的文字
+# 只获取内容进行合并
 def merge_without_format(docx_files: list):
     # 实例化文档对象
     doc = Document()
-    '''
-    只获取内容进行合并
-    '''
-    # 遍历每个文件
 
+    # 遍历每个文件 这里调用了排序函数排序
     for docx_file in sorted(docx_files):
         another_doc = Document(docx_file)
         # 获取每个文件的所有“段落”
@@ -50,17 +45,32 @@ def merge_without_format(docx_files: list):
             print(text)
 
     # 所有文件合并完成后在指定路径进行保存
-    doc.save(Path(word_files_path, '合并word文件.docx'))
+    doc.save(Path(word_files_path, '合并word文字内容.docx'))
 
+# 完全合并，不管内容是文字、图片还是其它
+def merge_files(docx_files:list):
+    doc = Document()
+    for docx_file in sorted(docx_files):
+        another_doc = Document(docx_file)
+        # 遍历每一页
+        for word_body in another_doc.element.body:
+            # 合并内容到新的word文档
+            doc.element.body.append(word_body)
+
+    doc.save(Path(word_files_path,'合并word所有内容.docx'))
 
 # 调用函数
 # merge_without_format(files)
+# merge_files(files)
 
 
 from docx.shared import RGBColor
 
-# 属性设置参考：https://python-docx.readthedocs.io/en/latest/api/text.html#run-objects
-def add_content_mode1(txt_path: str):
+'''
+该方法主要将txt等其它文件中的文本内容输出到word格式文件中，并设置相应的字体格式等
+属性设置参考：https://python-docx.readthedocs.io/en/latest/api/text.html#run-objects
+'''
+def add_content_from_txt(txt_path: str):
     # 实例化文档对象
     doc = Document()
     # 像文本对象中添加内容
@@ -74,4 +84,16 @@ def add_content_mode1(txt_path: str):
 
     doc.save(Path(word_files_path,'合并txt并格式化的word文件.docx'))
 
-add_content_mode1('word/test.txt')
+# add_content_from_txt('word/test.txt')
+
+
+from docx import shared
+
+def add_picture(img_path:str):
+    doc = Document()
+    # 添加图片函数，如果没有指定width和height，会将原图添加到文档中。有指定则会按比例缩放。
+    doc.add_picture(img_path, width=shared.Inches(5),height=shared.Pt(200))
+    doc.save(Path(word_files_path,'图片合并到word中测试文件.docx'))
+
+
+add_picture('word/img.png')
